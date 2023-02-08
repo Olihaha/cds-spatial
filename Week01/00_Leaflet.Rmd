@@ -169,7 +169,36 @@ Now that we have learned the basics of using the Map Widget, let learn how to ad
 
 First, create a Danish equivalent of `AUSmap` with ESRI layers and call it `DKmap`
 ```{r dkmap}
-## YOUR CODE HERE
+l_dk <- leaflet() %>% 
+  setView(10, 56, zoom = 6,8) %>%
+  addTiles()  # checking I am in the right area
+
+esri <- grep("^Esri", providers, value = TRUE)
+
+# create the basic map document
+dkmap <- l_dk %>%
+  addLayersControl(baseGroups = names(esri),
+                   options = layersControlOptions(collapsed = FALSE)) %>%
+  addMiniMap(tiles = esri[[1]], toggleDisplay = TRUE,
+             position = "bottomright") %>%
+  addMeasure(
+    position = "bottomleft",
+    primaryLengthUnit = "meters",
+    primaryAreaUnit = "sqmeters",
+    activeColor = "#3D535D",
+    completedColor = "#7D4479") %>% 
+  htmlwidgets::onRender("
+                        function(el, x) {
+                        var myMap = this;
+                        myMap.on('baselayerchange',
+                        function (e) {
+                        myMap.minimap.changeLayer(L.tileLayer.provider(e.name));
+                        })
+                        }") %>% 
+addControl("", position = "topright")
+
+dkmap
+
 ```
 
 
@@ -192,10 +221,13 @@ Read in the data from googlesheet with `read_sheet()` function, specifying the p
 ```{r read-sheet}
 gs4_deauth() # if the authentication is not working for you
 
-places <- read_sheet("https://docs.google.com/spreadsheets/d/1PlxsPElZML8LZKyXbqdAYeQCDIvDps2McZx1cTVWSzI/edit#gid=1817942479",
+places <- read_sheet("https://docs.google.com/spreadsheets/d/1PlxsPElZML8LZKyXbqdAYeQCDIvDps2McZx1cTVWSzI/edit#gid=1275868348",
                      range = "SA2022",
                      col_types = "cccnncnc")
 glimpse(places)
+
+places <- places %>%
+  filter(!is.na('longitude'))
 ```
 
 Once you verify that the places are all in, and the longitude and latitude columns are in fact decimal numbers, add them to the map document with `addMarkers()`
@@ -205,7 +237,9 @@ leaflet() %>%
   addTiles() %>% 
   addMarkers(lng = places$Longitude, 
              lat = places$Latitude,
-             popup = places$Description)
+             popup = paste0(places$Placename, "<br>",
+                            places$Description))
+
 ```
 
 Given that this little chunk basically is a sequence of commands that starts with 'create a map' and continues with 'addMarkers()',  add these points to your DKmap document
@@ -220,7 +254,6 @@ Try doing this in three steps
 
 You can find the tips for this on the [Leaflet R website](https://rstudio.github.io/leaflet/markers.html). Look for the Popups in the the left menu and Marker Clusters under markers.
 ```{r dkmap-data}
-# YOUR CODE
 
 ```
 
