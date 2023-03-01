@@ -1,6 +1,9 @@
+*_cache
+/data/
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
 HW*
 *_key.*
+*.rds*
